@@ -6,6 +6,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { pool } from "./config/db.js";
 import authRouter from "./routes/auth.routes.js";
+import categoryRouter from "./routes/category.routes.js";
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(cookieParser());
 
 // Auth routes
 app.use("/api/auth", authRouter);
+app.use("api/categories", categoryRouter)
 
 app.get("/users", async (req, res) => {
   try {

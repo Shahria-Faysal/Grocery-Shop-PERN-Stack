@@ -23,6 +23,11 @@ model User {
   role        String   @default("user")
   user_type   String?
   phone       String
+  isVerified  Boolean  @default(false)
+  verificationToken        String?
+  verificationTokenExpires DateTime?
+  resetPasswordToken        String?
+  resetPasswordExpire       DateTime?
   created_at  DateTime @default(now())
 
   cart_items  CartItem[]
@@ -49,8 +54,8 @@ model Product {
   image_url        String?
   created_at       DateTime @default(now())
 
-  category_id Int?
-  category    Category? @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  category_id Int
+  category    Category @relation(fields: [category_id], references: [id], onDelete: Restrict)
 
   cart_items  CartItem[]
   order_items OrderItem[]

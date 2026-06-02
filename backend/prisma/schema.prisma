@@ -1,0 +1,108 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentMethod {
+  COD
+  Cash
+  Card
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String   @unique
+  password    String
+  role        String   @default("user")
+  user_type   String?
+  phone       String
+  created_at  DateTime @default(now())
+
+  cart_items  CartItem[]
+  orders      Order[]
+  audit_logs  AuditLog[]
+}
+
+model Category {
+  id         Int      @id @default(autoincrement())
+  name       String
+  created_at DateTime @default(now())
+
+  products   Product[]
+}
+
+model Product {
+  id               Int      @id @default(autoincrement())
+  name             String
+  description      String?
+  price            Decimal  @db.Decimal(10, 2)
+  unit             String
+  discount_percent Decimal  @default(0) @db.Decimal(5, 2)
+  stock            Int      @default(0)
+  image_url        String?
+  created_at       DateTime @default(now())
+
+  category_id Int?
+  category    Category? @relation(fields: [category_id], references: [id], onDelete: SetNull)
+
+  cart_items  CartItem[]
+  order_items OrderItem[]
+}
+
+model CartItem {
+  id         Int @id @default(autoincrement())
+  quantity   Int
+
+  user_id    Int
+  product_id Int
+
+  user       User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  product    Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, product_id])
+}
+
+model Order {
+  id          Int      @id @default(autoincrement())
+  total_price Decimal  @db.Decimal(10, 2)
+  status      String   @default("pending")
+  payment     PaymentMethod?
+  created_at  DateTime @default(now())
+
+  user_id Int
+  user    User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  order_items OrderItem[]
+}
+
+model OrderItem {
+  id       Int     @id @default(autoincrement())
+  quantity Int
+  price    Decimal @db.Decimal(10, 2)
+
+  order_id   Int
+  product_id Int
+
+  order   Order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [product_id], references: [id])
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  action     String
+  table_name String?
+  record_id  Int?
+  old_data   Json?
+  new_data   Json?
+  created_at DateTime @default(now())
+
+  user_id Int?
+  user    User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
+}

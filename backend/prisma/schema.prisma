@@ -50,8 +50,8 @@ model Product {
   description      String?
   price            Decimal  @db.Decimal(10, 2)
   unit             String
-  discount_percent Decimal  @default(0) @db.Decimal(5, 2)
-  stock            Int      @default(0)
+  discount_percent Decimal @default(0.0) @db.Decimal(5, 2)
+  stock            Decimal @db.Decimal(10, 2) @default(0)
   image_url        String?
   created_at       DateTime @default(now())
 
@@ -64,7 +64,7 @@ model Product {
 
 model CartItem {
   id         Int @id @default(autoincrement())
-  quantity   Int
+  quantity   Decimal @db.Decimal(10, 2)
 
   user_id    Int
   product_id Int
@@ -75,11 +75,19 @@ model CartItem {
   @@unique([user_id, product_id])
 }
 
+enum OrderStatus {
+  pending
+  confirmed
+  shipped
+  delivered
+  cancelled
+}
+
 model Order {
   id          Int      @id @default(autoincrement())
   total_price Decimal  @db.Decimal(10, 2)
-  status      String   @default("pending")
-  payment     PaymentMethod?
+  status      OrderStatus  @default(pending)
+  payment     PaymentMethod
   created_at  DateTime @default(now())
 
   user_id Int

@@ -7,7 +7,7 @@ export const getCartItems = async (req, res) => {
         const id = Number(req.user.id)
         const cartItems = await prisma.cartItem.findMany({
             where: {
-                userId: id
+                user_id: id
             }
         })
         return res.status(200).json({

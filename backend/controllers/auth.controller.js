@@ -8,7 +8,7 @@ import crypto from "crypto";
 //register user
 export const register = async (req, res) => {
     try {
-        const { name, email, password, user_type, phone } = req.body;
+        const { name, email, password, user_type, phone, role } = req.body;
 
         if (!name || !email || !password || !phone) {
             return res.status(400).json({ message: "Please provide all required fields" });
@@ -32,13 +32,14 @@ export const register = async (req, res) => {
 
         const user = await prisma.user.create({
             data: {
-                name,
-                email,
+                name: name,
+                email: email,
                 password: hashedPassword,
-                user_type,
-                phone,
-                verificationToken,
-                verificationTokenExpires
+                user_type: user_type,
+                role: role,
+                phone: phone,
+                verificationToken: verificationToken,
+                verificationTokenExpires: verificationTokenExpires
             }
         })
 
@@ -265,3 +266,39 @@ export const resetPassword = async (req, res) => {
         res.status(500).json({ success: false, message: err.message });
     }
 };
+
+
+// get user data
+export const getMe = async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        })
+        return res.status(200).json({
+            message: "User fetched successfully",
+            user
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: "Internal server error"
+        })
+    }
+}
+
+//logout
+export const logout = async (req, res) => {
+    try {
+        res.clearCookie("token");
+        res.status(200).json({
+            message: "Logout successful"
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+}

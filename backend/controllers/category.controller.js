@@ -1,4 +1,4 @@
-import { prisma } from "../config/db.js";
+import prisma from "../lib/prisma.js";
 
 //get categories
 export const getCategories = async (req, res) => {
@@ -57,7 +57,7 @@ export const createCategory = async (req, res) => {
 // get category by id
 export const getCategoryById = async (req, res) => {
     try {
-        const { id } = req.params;
+        const id = Number(req.params.id);
         const category = await prisma.category.findUnique({
             where: {
                 id
@@ -88,7 +88,7 @@ export const deleteCategory = async (req, res) => {
         })
     }
     try {
-        const { id } = req.params;
+        const id = Number(req.params.id);
         const category = await prisma.category.delete({
             where: {
                 id
@@ -114,7 +114,7 @@ export const editCategory = async (req, res) => {
         })
     }
     try {
-        const { id } = req.params;
+        const id = Number(req.params.id);
         const { name } = req.body;
         const category = await prisma.category.update({
             where: {

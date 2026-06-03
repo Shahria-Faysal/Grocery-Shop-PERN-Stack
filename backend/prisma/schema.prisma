@@ -29,6 +29,7 @@ model User {
   resetPasswordToken        String?
   resetPasswordExpire       DateTime?
   created_at  DateTime @default(now())
+  isBlocked Boolean  @default(false)
 
   cart_items  CartItem[]
   orders      Order[]

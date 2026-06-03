@@ -115,14 +115,18 @@ export const editCategory = async (req, res) => {
     }
     try {
         const id = Number(req.params.id);
+        // Fetch existing category for fallback values
+        const existingCategory = await prisma.category.findUnique({ where: { id } });
+        if (!existingCategory) {
+          return res.status(404).json({ message: "Category not found" });
+        }
         const { name } = req.body;
+        const updateData = {
+          name: name ?? existingCategory.name,
+        };
         const category = await prisma.category.update({
-            where: {
-                id
-            },
-            data: {
-                name
-            }
+          where: { id },
+          data: updateData,
         })
         return res.status(200).json({
             message: "Category updated successfully",

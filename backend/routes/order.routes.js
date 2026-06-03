@@ -4,7 +4,7 @@ import { authorize, protect } from "../middlewares/auth.middleware.js";
 
 const orderRouter = express.Router();
 
-orderRouter.post("/create", protect, createOrder);
+orderRouter.post("/create", protect,authorize("user"), createOrder);
 orderRouter.get("/", protect, authorize("user"), getOrders);
 orderRouter.get("/all", protect, authorize("admin"), getAllOrders);
 orderRouter.get("/:id", protect,authorize("admin"), getOrderById);

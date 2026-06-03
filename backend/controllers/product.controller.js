@@ -56,7 +56,7 @@ export const addProduct = async (req, res) => {
         })
     }
     try {
-        const { name, description, price, unit, categoryId, image } = req.body;
+        const { name, description, price, unit, categoryId, stock, image } = req.body;
         if (!name || !description || !price || !categoryId || !unit ) {
             return res.status(400).json({
                 message: "Please provide all the details"
@@ -69,6 +69,7 @@ export const addProduct = async (req, res) => {
                 price: price,
                 unit: unit,
                 category_id: parseInt(categoryId),
+                stock: stock,
                 image_url: image
             }
         })
@@ -93,20 +94,27 @@ export const updateProduct = async (req, res) => {
     }
     try {
         const id = Number(req.params.id);
-        const { name, description, price, categoryId, image } = req.body;
+        // Fetch the current product to use as fallback values
+        const existingProduct = await prisma.product.findUnique({
+          where: { id },
+        });
+        if (!existingProduct) {
+          return res.status(404).json({ message: "Product not found" });
+        }
+        const { name, description, price, unit, categoryId, stock, image } = req.body;
+        const updateData = {
+          name: name ?? existingProduct.name,
+          description: description ?? existingProduct.description,
+          price: price ?? existingProduct.price,
+          unit: unit ?? existingProduct.unit,
+          category_id: categoryId ? parseInt(categoryId) : existingProduct.category_id,
+          stock: stock ?? existingProduct.stock,
+          image_url: image ?? existingProduct.image_url,
+        };
         const product = await prisma.product.update({
-            where: {
-                id
-            },
-            data: {
-                name: name,
-                description: description,
-                price: price,
-                unit: unit,
-                category_id: parseInt(categoryId),
-                image_url: image
-            }
-        })
+          where: { id },
+          data: updateData,
+        });
         return res.status(200).json({
             message: "Product updated successfully",
             product

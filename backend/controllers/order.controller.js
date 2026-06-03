@@ -1,6 +1,8 @@
 import { Prisma, OrderStatus } from "@prisma/client";
-import prisma from "../lib/prisma";
+import prisma from "../lib/prisma.js";
 
+
+//create order
 export const createOrder = async (req, res) => {
   try {
     const order = await prisma.$transaction(async (tx) => {
@@ -16,7 +18,7 @@ export const createOrder = async (req, res) => {
       const cartMap = new Map(cartItems.map((i) => [i.product_id, i]));
 
       const products = await tx.$queryRaw`
-        SELECT * FROM products
+        SELECT * FROM "Product"
         WHERE id IN (${Prisma.join(productIds)})
         FOR UPDATE
       `;
@@ -47,7 +49,7 @@ export const createOrder = async (req, res) => {
           user_id: req.user.id,
           total_price,
           payment: req.body.payment,
-          status: OrderStatus.confirmed,
+          // status: OrderStatus.pending,
           order_items: {
             create: products.map((product) => {
               const item = cartMap.get(product.id);

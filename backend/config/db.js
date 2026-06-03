@@ -6,6 +6,9 @@ dotenv.config();
 
 neonConfig.webSocketConstructor = ws;
 
+neonConfig.poolQueryViaFetch = false;
+
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  keepAlive: true,
 });

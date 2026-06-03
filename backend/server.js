@@ -4,7 +4,7 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { pool } from "./config/db.js";
+import prisma from "./lib/prisma.js";
 import authRouter from "./routes/auth.routes.js";
 import categoryRouter from "./routes/category.routes.js";
 import productRouter from "./routes/product.routes.js";
@@ -19,18 +19,18 @@ app.use(cookieParser());
 
 // Auth routes
 app.use("/api/auth", authRouter);
-app.use("/api/categories", categoryRouter)
-app.use("/api/products", productRouter);
+app.use("/api/category", categoryRouter)
+app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 
 app.get("/users", async (req, res) => {
   try {
-    const result = await pool.query("SELECT NOW()");
-    res.json(result.rows);
+    const result = await prisma.$queryRaw`SELECT NOW()`;
+    res.json(result);
   } catch (err) {
-    console.error("❌ FULL ERROR:", err);   // <-- IMPORTANT
-    res.status(500).json({ error: err.message }); // <-- show message
+    console.error("❌ FULL ERROR:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -39,4 +39,11 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+const server = app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+// Keep the process alive and log unhandled errors
+server.keepAliveTimeout = 65000;
+setInterval(() => {}, 1 << 30); // heartbeat to keep event loop alive
+process.on("unhandledRejection", (err) => {
+  console.error("❌ Unhandled Rejection:", err);
+});

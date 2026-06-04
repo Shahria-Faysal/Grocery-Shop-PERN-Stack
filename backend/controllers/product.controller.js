@@ -4,21 +4,78 @@ import prisma from "../lib/prisma.js";
 // fetch all products
 export const getAllProducts = async (req, res) => {
     try {
-        const products = await prisma.product.findMany()
-        if (!products) {
+        const { search, categoryId, minPrice, maxPrice, inStock, page, limit } = req.query;
+
+        const where = {};
+
+        if (search) {
+            where.OR = [
+                { name: { contains: search, mode: "insensitive" } },
+                { description: { contains: search, mode: "insensitive" } }
+            ];
+        }
+
+        if (categoryId) {
+            where.category_id = Number(categoryId);
+        }
+
+        if (minPrice || maxPrice) {
+            where.price = {};
+            if (minPrice) {
+                where.price.gte = Number(minPrice);
+            }
+            if (maxPrice) {
+                where.price.lte = Number(maxPrice);
+            }
+        }
+
+        if (inStock === "true") {
+            where.stock = { gt: 0 };
+        } else if (inStock === "false") {
+            where.stock = 0;
+        }
+
+        // Pagination parameters
+        const pageNum = Number(page) || 1;
+        const limitNum = Number(limit) || 10;
+        const skip = (pageNum - 1) * limitNum;
+
+        // Fetch products and total count concurrently
+        const [products, totalProducts] = await Promise.all([
+            prisma.product.findMany({
+                where,
+                skip,
+                take: limitNum,
+                include: {
+                    category: true
+                }
+            }),
+            prisma.product.count({ where })
+        ]);
+
+        if (!products || products.length === 0) {
             return res.status(404).json({
                 message: "No products found"
-            })
+            });
         }
+
+        const totalPages = Math.ceil(totalProducts / limitNum);
+
         return res.status(200).json({
             message: "Products fetched successfully",
-            products
-        })
+            products,
+            pagination: {
+                totalProducts,
+                totalPages,
+                currentPage: pageNum,
+                limit: limitNum
+            }
+        });
     } catch (err) {
         console.log(err);
         return res.status(500).json({
             message: "Internal server error"
-        })
+        });
     }
 }
 

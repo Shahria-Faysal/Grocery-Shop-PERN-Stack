@@ -2,6 +2,31 @@ import { Prisma, OrderStatus } from "@prisma/client";
 import prisma from "../lib/prisma.js";
 
 
+// price calulate
+const USER_DISCOUNTS = {
+  student: 10,
+  vip: 25,
+  regular: 0
+};
+const getFinalPrice = (product, userType) => {
+  const basePrice = Number(product.price);
+
+  // 1. product discount
+  const productDiscount = Number(product.discount_percent || 0);
+  let priceAfterProductDiscount =
+    basePrice - (basePrice * productDiscount) / 100;
+
+  // 2. user discount
+  const userDiscount = USER_DISCOUNTS[userType] || 0;
+
+  const finalPrice =
+    priceAfterProductDiscount -
+    (priceAfterProductDiscount * userDiscount) / 100;
+
+  return finalPrice;
+};
+
+
 //create order
 export const createOrder = async (req, res) => {
   try {
@@ -45,10 +70,16 @@ export const createOrder = async (req, res) => {
         }
       }
 
+      const userType = req.user.user_type || "regular";
+
       const total_price = products.reduce((sum, product) => {
         const item = cartMap.get(product.id);
-        return sum + Number(product.price) * item.quantity;
+
+        const finalPrice = getFinalPrice(product, userType);
+
+        return sum + finalPrice * Number(item.quantity);
       }, 0);
+
 
       await Promise.all(
         cartItems.map((item) =>
@@ -71,7 +102,7 @@ export const createOrder = async (req, res) => {
               return {
                 product_id: product.id,
                 quantity: item.quantity,
-                price: Number(product.price),
+                price: getFinalPrice(product, userType)
               };
             }),
           },

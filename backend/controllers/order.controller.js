@@ -88,6 +88,17 @@ export const createOrder = async (req, res) => {
         }
       });
 
+      // Audit Log within transaction
+      await tx.auditLog.create({
+        data: {
+          action: "CREATE",
+          table_name: "Order",
+          record_id: order.id,
+          new_data: order,
+          user_id: req.user.id
+        }
+      });
+
       return order;
     });
 
@@ -140,10 +151,24 @@ export const cancelOrder = async (req, res) => {
         )
       );
 
-      return tx.order.update({
+      const updatedOrder = await tx.order.update({
         where: { id: orderId },
         data: { status: OrderStatus.cancelled },
       });
+
+      // Audit Log within transaction
+      await tx.auditLog.create({
+        data: {
+          action: "CANCEL_ORDER",
+          table_name: "Order",
+          record_id: orderId,
+          old_data: { status: order.status },
+          new_data: { status: OrderStatus.cancelled },
+          user_id: req.user.id
+        }
+      });
+
+      return updatedOrder;
     });
 
     res.json(updated);
@@ -239,6 +264,18 @@ export const updateOrderStatus = async (req, res) => {
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: { status }
+    });
+
+    // Audit Log
+    await prisma.auditLog.create({
+      data: {
+        action: "UPDATE",
+        table_name: "Order",
+        record_id: orderId,
+        old_data: { status: order.status },
+        new_data: { status },
+        user_id: req.user.id
+      }
     });
 
     res.json({

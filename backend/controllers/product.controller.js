@@ -129,7 +129,19 @@ export const addProduct = async (req, res) => {
                 stock: stock,
                 image_url: image
             }
-        })
+        });
+
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                action: "CREATE",
+                table_name: "Product",
+                record_id: product.id,
+                new_data: product,
+                user_id: req.user.id
+            }
+        });
+
         return res.status(201).json({
             message: "Product added successfully",
             product
@@ -172,6 +184,19 @@ export const updateProduct = async (req, res) => {
           where: { id },
           data: updateData,
         });
+
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                action: "UPDATE",
+                table_name: "Product",
+                record_id: product.id,
+                old_data: existingProduct,
+                new_data: product,
+                user_id: req.user.id
+            }
+        });
+
         return res.status(200).json({
             message: "Product updated successfully",
             product
@@ -197,7 +222,19 @@ export const deleteProduct = async (req, res) => {
             where: {
                 id
             }
-        })
+        });
+
+        // Audit Log
+        await prisma.auditLog.create({
+            data: {
+                action: "DELETE",
+                table_name: "Product",
+                record_id: product.id,
+                old_data: product,
+                user_id: req.user.id
+            }
+        });
+
         return res.status(200).json({
             message: "Product deleted successfully",
             product

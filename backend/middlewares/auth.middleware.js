@@ -4,6 +4,8 @@ import prisma from "../lib/prisma.js";
 export const protect = async (req, res, next) => {
     try {
         let token;
+
+        // 1. Check Authorization header
         if (
             req.headers.authorization &&
             req.headers.authorization.startsWith("Bearer")
@@ -11,36 +13,46 @@ export const protect = async (req, res, next) => {
             token = req.headers.authorization.split(" ")[1];
         }
 
+        // 2. Check cookies (IMPORTANT)
+        if (!token && req.cookies?.token) {
+            token = req.cookies.token;
+        }
+
         if (!token) {
             return res.status(401).json({
-                message: "Not authorized",
-                success: false
+                success: false,
+                message: "Not authorized"
             });
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         req.user = await prisma.user.findUnique({
-            where: {
-                id: decoded.id
-            }
-        })
+            where: { id: decoded.id }
+        });
 
-        if(req.user && req.user.isBlocked) {
+        if (!req.user) {
             return res.status(401).json({
                 success: false,
-                message: "Your account has been blocked, please contact support"
-            })
+                message: "User not found"
+            });
+        }
+
+        if (req.user.isBlocked) {
+            return res.status(403).json({
+                success: false,
+                message: "Your account has been blocked"
+            });
         }
 
         next();
     } catch (err) {
-        res.status(401).json({
+        return res.status(401).json({
             success: false,
-            message: "Token Invalid"
+            message: "Token invalid"
         });
     }
-}
+};
 
 // role based authentication
 export const authorize = (...roles) => {

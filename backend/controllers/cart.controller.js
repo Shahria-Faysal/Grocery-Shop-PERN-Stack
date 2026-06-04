@@ -7,8 +7,8 @@ export const getCartItems = async (req, res) => {
         const id = Number(req.user.id)
         const cartItems = await prisma.cartItem.findMany({
             where: {
-                user_id: id
-            }
+                user_id: id,
+            },
         })
         return res.status(200).json({
             message: "Cart fetched successfully",
@@ -32,11 +32,27 @@ export const addToCart = async (req, res) => {
                 message: "Please provide all the details"
             })
         }
+        const product = await prisma.product.findUnique({
+            where: { id: Number(productId) },
+        });
+
+        if (!product) {
+            return res.status(404).json({
+                message: "Product not found"
+            });
+        }
+
+        // Check stock
+        if (product.stock < Number(quantity)) {
+            return res.status(400).json({
+                message: "Not enough stock available"
+            });
+        }
         const cartItem = await prisma.cartItem.create({
             data: {
+                product_id: Number(productId),
                 quantity: Number(quantity),
-                user_id: id,
-                product_id: Number(productId)
+                user_id: id
             }
         })
         return res.status(201).json({
@@ -53,18 +69,22 @@ export const addToCart = async (req, res) => {
 
 // remove item from cart
 export const removeFromCart = async (req, res) => {
-    if (req.user.role !== "user") {
-        return res.status(401).json({
-            message: "Unauthorized"
-        })
-    }
     try {
-        const id = Number(req.params.id)
+        const id = Number(req.user.id)
+        const productId = Number(req.params.id)
         const cartItem = await prisma.cartItem.delete({
             where: {
-                id
-            }
+                user_id_product_id: {
+                    user_id: id,
+                    product_id: productId
+                }
+            },
         })
+        if(!cartItem){
+            return res.status(404).json({
+                message: "Cart item not found"
+            })
+        }
         return res.status(200).json({
             message: "Item removed from cart successfully",
             cartItem
@@ -80,12 +100,15 @@ export const removeFromCart = async (req, res) => {
 // increment the number of same product count in cart
 export const incrementCartItem = async (req, res) => {
     try {
-        const id = Number(req.params.id);
+        const id = Number(req.user.id)
+        const productId = Number(req.params.id);
 
-        const cartItem = await prisma.cartItem.findFirst({
+        const cartItem = await prisma.cartItem.findUnique({
             where: {
-                id,
-                user_id: req.user.id
+                user_id_product_id: {
+                    user_id: id,
+                    product_id: productId
+                }
             }
         });
 
@@ -106,7 +129,12 @@ export const incrementCartItem = async (req, res) => {
         }
 
         const updated = await prisma.cartItem.update({
-            where: { id },
+            where: {
+                user_id_product_id: {
+                    user_id: id,
+                    product_id: productId
+                }
+            },
             data: {
                 quantity: { increment: 1 }
             }
@@ -125,15 +153,17 @@ export const incrementCartItem = async (req, res) => {
     }
 };
 
-//decrement the number of same product count in cart
 export const decrementCartItem = async (req, res) => {
     try {
-        const id = Number(req.params.id);
+        const id = Number(req.user.id);
+        const productId = Number(req.params.id);
 
-        const cartItem = await prisma.cartItem.findFirst({
+        const cartItem = await prisma.cartItem.findUnique({
             where: {
-                id,
-                user_id: req.user.id
+                user_id_product_id: {
+                    user_id: id,
+                    product_id: productId
+                }
             }
         });
 
@@ -155,7 +185,12 @@ export const decrementCartItem = async (req, res) => {
         }
 
         const updated = await prisma.cartItem.update({
-            where: { id },
+            where: {
+                user_id_product_id: {
+                    user_id: id,
+                    product_id: productId
+                }
+            },
             data: {
                 quantity: { decrement: 1 }
             }

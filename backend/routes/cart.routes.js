@@ -4,11 +4,11 @@ import { authorize, protect } from "../middlewares/auth.middleware.js";
 
 const cartRouter = express.Router();
 
-cartRouter.post("/add", protect,authorize("user"), addToCart);
-cartRouter.get("/", protect,authorize("user"), getCartItems);
-cartRouter.delete("/remove/:id", protect,authorize("user"), removeFromCart);
-cartRouter.delete("/", protect,authorize("user"), removeAllFromCart);
-cartRouter.patch("/increment/:id", protect, authorize("user"), incrementCartItem);
-cartRouter.patch("/decrement/:id", protect, authorize("user"), decrementCartItem);
+cartRouter.post("/add", protect, authorize("user"), addToCart);
+cartRouter.get("/", protect, getCartItems);
+cartRouter.delete("/:id", protect, removeFromCart);
+cartRouter.delete("/", protect, removeAllFromCart);
+cartRouter.patch("/increment/:id", protect, incrementCartItem);
+cartRouter.patch("/decrement/:id", protect, decrementCartItem);
 
 export default cartRouter;

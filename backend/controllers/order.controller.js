@@ -6,12 +6,27 @@ import prisma from "../lib/prisma.js";
 export const createOrder = async (req, res) => {
   try {
     const order = await prisma.$transaction(async (tx) => {
+      const { product_ids } = req.body;
+
+      if (!product_ids || product_ids.length === 0) {
+        throw new Error("No items selected");
+      }
+
       const cartItems = await tx.cartItem.findMany({
-        where: { user_id: req.user.id },
+        where: {
+          user_id: req.user.id,
+          product_id: {
+            in: product_ids
+          }
+        },
       });
 
       if (cartItems.length === 0) {
         throw new Error("Cart is empty");
+      }
+
+      if (cartItems.length !== product_ids.length) {
+        throw new Error("Some items not found in cart");
       }
 
       const productIds = cartItems.map((i) => i.product_id);
@@ -64,7 +79,14 @@ export const createOrder = async (req, res) => {
         include: { order_items: true },
       });
 
-      await tx.cartItem.deleteMany({ where: { user_id: req.user.id } });
+      await tx.cartItem.deleteMany({
+        where: {
+          user_id: req.user.id,
+          product_id: {
+            in: product_ids
+          }
+        }
+      });
 
       return order;
     });
@@ -153,19 +175,7 @@ export const getOrders = async (req, res) => {
     const order = await prisma.order.findMany({
       where: { user_id: id },
     });
-    
-    if (!order) {
-      const err = new Error("Order not found");
-      err.status = 404;
-      throw err;
-    }
 
-    if (order.user_id !== req.user.id) {
-      const err = new Error("Forbidden");
-      err.status = 403;
-      throw err;
-    }
-    
     res.json(order);
   } catch (err) {
     const status = err.status ?? 500;
@@ -183,7 +193,7 @@ export const getOrderById = async (req, res) => {
       where: { id: orderId },
       include: { order_items: true },
     });
-    
+
     if (!order) {
       const err = new Error("Order not found");
       err.status = 404;
@@ -195,7 +205,7 @@ export const getOrderById = async (req, res) => {
       err.status = 403;
       throw err;
     }
-    
+
     res.json(order);
   } catch (err) {
     const status = err.status ?? 500;

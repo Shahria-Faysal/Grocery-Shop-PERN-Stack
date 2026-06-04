@@ -269,24 +269,24 @@ export const resetPassword = async (req, res) => {
 
 
 // get user data
-export const getMe = async (req, res) => {
-    try {
-        const user = await prisma.user.findUnique({
-            where: {
-                id: req.user.id
-            }
-        })
-        return res.status(200).json({
-            message: "User fetched successfully",
-            user
-        })
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-            message: "Internal server error"
-        })
-    }
-}
+// export const getMe = async (req, res) => {
+//     try {
+//         const user = await prisma.user.findUnique({
+//             where: {
+//                 id: req.user.id
+//             }
+//         })
+//         return res.status(200).json({
+//             message: "User fetched successfully",
+//             user
+//         })
+//     } catch (error) {
+//         console.log(error);
+//         return res.status(500).json({
+//             message: "Internal server error"
+//         })
+//     }
+// }
 
 //logout
 export const logout = async (req, res) => {

@@ -11,6 +11,8 @@ import productRouter from "./routes/product.routes.js";
 import cartRouter from "./routes/cart.routes.js";
 import orderRouter from "./routes/order.routes.js";
 import helmet from "helmet";
+import userRouter from "./routes/user.routes.js";
+
 
 const app = express();
 
@@ -25,6 +27,7 @@ app.use("/api/category", categoryRouter)
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
+app.use("/api/user", userRouter);
 
 app.get("/users", async (req, res) => {
   try {

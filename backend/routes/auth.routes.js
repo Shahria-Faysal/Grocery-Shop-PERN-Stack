@@ -10,7 +10,7 @@ authRouter.post("/verify-email", verifyEmail);
 authRouter.post("/login", login);
 authRouter.post("/logout", logout);
 
-authRouter.get("/me", protect, getMe);
+// authRouter.get("/me", protect, getMe);
 
 authRouter.post("/forgot-password", forgotPassword);
 authRouter.post("/reset-password/:token", resetPassword);

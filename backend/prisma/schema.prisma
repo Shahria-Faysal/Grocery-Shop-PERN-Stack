@@ -21,12 +21,17 @@ enum UserType {
   regular
 }
 
+enum Role {
+  admin
+  user
+}
+
 model User {
   id                       Int       @id @default(autoincrement())
   name                     String
   email                    String    @unique
   password                 String
-  role                     String    @default("user")
+  role                     Role      @default(user)
   user_type                UserType  @default(regular)
   phone                    String
   isVerified               Boolean   @default(false)
@@ -40,6 +45,7 @@ model User {
   cart_items CartItem[]
   orders     Order[]
   audit_logs AuditLog[]
+  favourites Favourite[]
 }
 
 model Category {
@@ -66,6 +72,21 @@ model Product {
 
   cart_items  CartItem[]
   order_items OrderItem[]
+  favourites  Favourite[]
+}
+
+model Favourite {
+  id Int @id @default(autoincrement())
+
+  user_id    Int
+  product_id Int
+
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@unique([user_id, product_id])
 }
 
 model CartItem {

@@ -210,4 +210,4 @@ npx prisma migrate dev   # Run migrations
 
 Key models: `User`, `Category`, `Product`, `CartItem`, `Order`, `OrderItem`, `Favourite`, `AuditLog`.
 
-#Frontend Still in work
+# Frontend still in work

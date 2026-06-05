@@ -13,6 +13,7 @@ import orderRouter from "./routes/order.routes.js";
 import helmet from "helmet";
 import userRouter from "./routes/user.routes.js";
 import favouriteRouter from "./routes/favourite.routes.js";
+import auditRouter from "./routes/audit.routes.js";
 
 
 const app = express();
@@ -30,6 +31,7 @@ app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/user", userRouter);
 app.use("/api/favourite", favouriteRouter);
+app.use("/api/audit", auditRouter);
 
 app.get("/users", async (req, res) => {
   try {

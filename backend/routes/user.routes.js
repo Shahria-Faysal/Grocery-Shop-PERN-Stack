@@ -7,9 +7,9 @@ const userRouter = express.Router();
 userRouter.get("/", protect, getUser);
 userRouter.get("/users", protect, authorize("admin"), getAllUsers);
 userRouter.get("/:id", protect, authorize("admin"), getUserById);
-userRouter.put("/edit/:id", protect, updateUser);
-userRouter.put("/edit/:id", protect, authorize("admin"), updateUserById);
+userRouter.patch("/edit", protect, updateUser);
+userRouter.patch("/edit/:id", protect, authorize("admin"), updateUserById);
 userRouter.delete("/delete/:id", protect, authorize("admin"), deleteUser);
-userRouter.put("/block/:id", protect, authorize("admin"), setUserBlockStatus);
+userRouter.patch("/block/:id", protect, authorize("admin"), setUserBlockStatus);
 
 export default userRouter;

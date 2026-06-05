@@ -16,10 +16,11 @@ export const getAllUsers = async (req, res) => {
 // get user details
 export const getUser = async (req, res) => {
     try {
+        const id = Number(req.user.id);
         const user = await prisma.user.findUnique({
-            where: { id: req.user.id }
+            where: { id }
         });
-        if(!user) {
+        if (!user) {
             return res.status(404).json({ error: "User not found" });
         }
         return res.status(200).json(user);
@@ -33,10 +34,11 @@ export const getUser = async (req, res) => {
 // get user by id for admin
 export const getUserById = async (req, res) => {
     try {
+        const id = Number(req.params.id);
         const user = await prisma.user.findUnique({
-            where: { id: req.params.id }
+            where: { id }
         });
-        if(!user) {
+        if (!user) {
             return res.status(404).json({ error: "User not found" });
         }
         return res.status(200).json(user);
@@ -50,8 +52,9 @@ export const getUserById = async (req, res) => {
 // Edit user
 export const updateUser = async (req, res) => {
     try {
+        const id = Number(req.user.id);
         const user = await prisma.user.update({
-            where: { id: req.user.id },
+            where: { id },
             data: req.body
         });
         if (!user) {
@@ -67,8 +70,9 @@ export const updateUser = async (req, res) => {
 // Edit user by id for admin
 export const updateUserById = async (req, res) => {
     try {
+        const id = Number(req.params.id);
         const user = await prisma.user.update({
-            where: { id: req.params.id },
+            where: { id },
             data: req.body
         });
         if (!user) {
@@ -85,15 +89,32 @@ export const updateUserById = async (req, res) => {
 // block / unblock user
 export const setUserBlockStatus = async (req, res) => {
     try {
-        const { userId } = req.params;
+        if (req.params.id === req.user.id) {
+            return res.status(403).json({ error: "You cannot block yourself" });
+        }
+
+        const id = Number(req.params.id);
         const { isBlocked } = req.body;
 
         if (typeof isBlocked !== "boolean") {
             return res.status(400).json({ error: "isBlocked must be boolean" });
         }
 
+        const targetUser = await prisma.user.findUnique({
+            where: { id }
+        });
+
+        if (!targetUser) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        if (targetUser.role === "admin") {
+            return res.status(403).json({ error: "Admin cannot be blocked" });
+        }
+
+        
         const updatedUser = await prisma.user.update({
-            where: { id: userId },
+            where: { id },
             data: { isBlocked },
         });
 

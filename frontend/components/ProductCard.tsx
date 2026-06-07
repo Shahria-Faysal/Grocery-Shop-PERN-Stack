@@ -5,14 +5,14 @@ import { Product } from "@/types";
 
 export default function ProductCard({ product }: { product: Product }) {
   const addToCart = async () => {
-    await api.post(`/cart/${product.id}`);
+    await api.post(`/cart/add/${product.id}`, { quantity: 1 });
   };
 
   const toggleFavorite = async () => {
     if (product.isFavorited) {
-      await api.delete(`/favorites/${product.id}`);
+      await api.delete(`/favourite/${product.id}`);
     } else {
-      await api.post(`/favorites/${product.id}`);
+      await api.post(`/favourite/add/${product.id}`);
     }
   };
 

@@ -4,7 +4,7 @@ import { authorize, protect } from "../middlewares/auth.middleware.js";
 
 const cartRouter = express.Router();
 
-cartRouter.post("/add", protect, authorize("user"), addToCart);
+cartRouter.post("/add/:id", protect, authorize("user"), addToCart);
 cartRouter.get("/", protect, getCartItems);
 cartRouter.delete("/:id", protect, removeFromCart);
 cartRouter.delete("/", protect, removeAllFromCart);

@@ -5,8 +5,8 @@ import { addToFavourites, getFavourites, removeFromFavourites } from "../control
 
 const favouriteRouter = express.Router();
 
-favouriteRouter.post("/add", protect, authorize("user"), addToFavourites);
+favouriteRouter.post("/add/:productId", protect, authorize("user"), addToFavourites);
 favouriteRouter.get("/", protect, authorize("user"), getFavourites);
-favouriteRouter.delete("/:id", protect, authorize("user"), removeFromFavourites);
+favouriteRouter.delete("/:productId", protect, authorize("user"), removeFromFavourites);
 
 export default favouriteRouter;

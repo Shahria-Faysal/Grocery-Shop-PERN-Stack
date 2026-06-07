@@ -9,7 +9,7 @@ export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    api.get<Product[]>("/products").then((res) => setProducts(res.data));
+    api.get<{ products: Product[] }>("/product").then((res) => setProducts(res.data.products));
   }, []);
 
   return (

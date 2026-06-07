@@ -4,7 +4,7 @@ import prisma from "../lib/prisma.js";
 //add favourite
 export const addToFavourites = async (req, res) => {
     try {
-        const productId = Number(req.params.id);
+        const productId = Number(req.params.productId);
 
         const favourite = await prisma.favourite.create({
             data: {
@@ -30,7 +30,7 @@ export const addToFavourites = async (req, res) => {
 //remove favourite
 export const removeFromFavourites = async (req, res) => {
     try {
-        const productId = Number(req.params.id);
+        const productId = Number(req.params.productId);
 
         await prisma.favourite.delete({
             where: {

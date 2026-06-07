@@ -9,10 +9,14 @@ export const getCartItems = async (req, res) => {
             where: {
                 user_id: id,
             },
+            include: {
+                product: true
+            }
         })
         return res.status(200).json({
             message: "Cart fetched successfully",
-            cartItems
+            cartItems,
+            userType: req.user.user_type || "regular"
         })
     } catch (error) {
         console.log(error);
@@ -26,14 +30,15 @@ export const getCartItems = async (req, res) => {
 export const addToCart = async (req, res) => {
     try {
         const id = Number(req.user.id)
-        const { productId, quantity } = req.body
+        const productId = Number(req.params.id)
+        const { quantity } = req.body
         if (!productId || !quantity) {
             return res.status(400).json({
                 message: "Please provide all the details"
             })
         }
         const product = await prisma.product.findUnique({
-            where: { id: Number(productId) },
+            where: { id: productId },
         });
 
         if (!product) {
@@ -50,7 +55,7 @@ export const addToCart = async (req, res) => {
         }
         const cartItem = await prisma.cartItem.create({
             data: {
-                product_id: Number(productId),
+                product_id: productId,
                 quantity: Number(quantity),
                 user_id: id
             }

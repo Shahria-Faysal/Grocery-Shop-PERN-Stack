@@ -8,7 +8,7 @@ export default function Favorites() {
   const [favorites, setFavorites] = useState<Product[]>([]);
 
   const fetchFavorites = async () => {
-    const res = await api.get("/favorites");
+    const res = await api.get("/favourite");
     setFavorites(res.data);
   };
 
@@ -17,7 +17,7 @@ export default function Favorites() {
   }, []);
 
   const remove = async (productId: number) => {
-    await api.delete(`/favorites/${productId}`);
+    await api.delete(`/favourite/${productId}`);
     fetchFavorites();
   };
 
@@ -27,7 +27,7 @@ export default function Favorites() {
 
       {favorites.map((item) => (
         <div key={item.id} className="flex gap-4 mb-4">
-          <span>{item.name}</span>
+          <span>{item.product.name}</span>
           <button onClick={() => remove(item.id)}>Remove</button>
         </div>
       ))}

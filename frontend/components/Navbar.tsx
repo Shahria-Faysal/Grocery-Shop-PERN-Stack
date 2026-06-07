@@ -10,7 +10,7 @@ export default function Navbar() {
     <nav className="flex gap-6 p-4 border-b">
       <Link href="/products">Products</Link>
       <Link href="/cart">Cart</Link>
-      <Link href="/favorites">Favorites</Link>
+      <Link href="/favourites">Favorites</Link>
 
       {user ? (
         <span>Hi, {user.name}</span>

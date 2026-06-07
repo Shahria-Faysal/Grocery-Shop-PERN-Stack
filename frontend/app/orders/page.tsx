@@ -14,8 +14,10 @@ interface OrderItem {
 
 interface Order {
   id: number;
-  total_price: number;
-  status: string;
+  payment: String;
+  status: String;
+  total_price: String;
+  user_id: number;
   order_items: OrderItem[];
 }
 
@@ -32,7 +34,7 @@ export default function Orders() {
   }, []);
 
   const cancelOrder = async (id: number) => {
-    await api.patch(`/orders/cancel/${id}`);
+    await api.delete(`/orders/cancel/${id}`);
     fetchOrders();
   };
 
@@ -47,22 +49,22 @@ export default function Orders() {
           <p>Total: {order.total_price} ৳</p>
 
           <div className="mt-2">
-            {order.order_items.map((item) => (
-              <p key={item.id}>
-                {item.product.name} x {item.quantity}
+            {order.order_items.map((items) => (
+              <p key={items.id}>
+                {items.product.name} x {items.quantity}
               </p>
             ))}
           </div>
 
           {(order.status === "pending" ||
             order.status === "confirmed") && (
-            <button
-              onClick={() => cancelOrder(order.id)}
-              className="mt-2 bg-red-500 text-white px-3 py-1"
-            >
-              Cancel Order
-            </button>
-          )}
+              <button
+                onClick={() => cancelOrder(order.id)}
+                className="mt-2 bg-red-500 text-white px-3 py-1"
+              >
+                Cancel Order
+              </button>
+            )}
         </div>
       ))}
     </div>

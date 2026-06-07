@@ -230,6 +230,13 @@ export const getOrders = async (req, res) => {
     const id = Number(req.user.id);
     const order = await prisma.order.findMany({
       where: { user_id: id },
+      include: {
+        order_items: {
+          include: {
+            product: true,
+          },
+        },
+      },
     });
 
     res.json(order);

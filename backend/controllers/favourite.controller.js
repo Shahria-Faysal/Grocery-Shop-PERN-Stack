@@ -66,3 +66,23 @@ export const getFavourites = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+//check favourite
+export const checkFavourite = async (req, res) => {
+    try {
+        const productId = Number(req.params.productId);
+
+        const favourite = await prisma.favourite.findUnique({
+            where: {
+                user_id_product_id: {
+                    user_id: req.user.id,
+                    product_id: productId
+                }
+            }
+        });
+
+        res.json(favourite);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};

@@ -86,6 +86,13 @@ export const getProductById = async (req, res) => {
         const product = await prisma.product.findUnique({
             where: {
                 id
+            },
+            include: {
+                category: {
+                    select:{
+                        name: true
+                    }
+                }
             }
         })
         if (!product) {

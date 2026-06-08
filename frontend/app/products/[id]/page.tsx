@@ -9,17 +9,12 @@ import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import { Product } from "@/types";
 
-const REVIEWS = [
-  { author: "Sarah M.", rating: 5, date: "June 1, 2026",  text: "Perfect ripeness! Will definitely order again." },
-  { author: "Tom K.",   rating: 4, date: "May 28, 2026",  text: "Great quality, arrived in good condition." },
-  { author: "Lucy R.",  rating: 5, date: "May 20, 2026",  text: "Organically grown and taste noticeably better than supermarket ones." },
-];
 
 const RELATED = [
-  { id: 5, name: "Avocados x4",       price: 3.99, image: "https://images.unsplash.com/photo-1519162808019-7de1683fa2ad?w=200" },
-  { id: 9, name: "Mixed Salad Bag",   price: 2.29, image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200" },
-  { id: 2, name: "Whole Milk 1L",     price: 2.49, image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200" },
-  { id: 3, name: "Sourdough Bread",   price: 4.99, image: "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=200" },
+  { id: 5, name: "Avocados x4", price: 3.99, image: "https://images.unsplash.com/photo-1519162808019-7de1683fa2ad?w=200" },
+  { id: 9, name: "Mixed Salad Bag", price: 2.29, image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200" },
+  { id: 2, name: "Whole Milk 1L", price: 2.49, image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200" },
+  { id: 3, name: "Sourdough Bread", price: 4.99, image: "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=200" },
 ];
 
 export default function ProductDetailPage() {
@@ -40,6 +35,14 @@ export default function ProductDetailPage() {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (!product) return;
+
+    api
+      .get(`/favourite/check/${product.id}`)
+      .then((res) => setInFavs(res.data));
+  }, [product?.id]);
+
   const handleAddToCart = async () => {
     if (!product) return;
     try {
@@ -53,12 +56,23 @@ export default function ProductDetailPage() {
     }
   };
 
+  const addToFavourites = async () => {
+    if (!product) return;
+    try {
+      await api.post(`/favourite/add/${product.id}`);
+      setInFavs(true);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add to favourite");
+    }
+  }
+
   if (!product) {
     return <div className="pt-32 text-center text-gray-500">Loading product...</div>;
   }
 
-  const images = product.image_url 
-    ? [product.image_url] 
+  const images = product.image_url
+    ? [product.image_url]
     : ["https://images.unsplash.com/photo-1542838132-92c53300491e?w=600"];
 
   const discount = Number(product.discount_percent || 0);
@@ -93,14 +107,14 @@ export default function ProductDetailPage() {
         {/* Info */}
         <div className="flex-1 space-y-5">
           <div>
-            <div className="text-sm text-[#FD6E20] font-medium mb-1">{product.category?.name || "Grocery"}</div>
+            <div className="text-sm text-[#FD6E20] font-medium mb-1">{product.category.name || "Grocery"}</div>
             <h1 className="text-3xl font-bold leading-tight">{product.name}</h1>
           </div>
 
           {/* Rating */}
           <div className="flex items-center gap-2">
             <div className="flex">
-              {[1,2,3,4,5].map(s => (
+              {[1, 2, 3, 4, 5].map(s => (
                 <Star key={s} className={`h-4 w-4 ${s <= 4 ? "text-yellow-400 fill-yellow-400" : "text-gray-200 fill-gray-200"}`} />
               ))}
             </div>
@@ -148,7 +162,7 @@ export default function ProductDetailPage() {
               variant="outline"
               size="icon"
               className={`h-12 w-12 rounded-full shrink-0 ${inFavs ? "border-[#FD6E20] text-[#FD6E20] bg-orange-50" : ""}`}
-              onClick={() => setInFavs(f => !f)}
+              onClick={addToFavourites}
             >
               <Heart className={`h-5 w-5 ${inFavs ? "fill-[#FD6E20]" : ""}`} />
             </Button>
@@ -157,9 +171,9 @@ export default function ProductDetailPage() {
           {/* Badges */}
           <div className="flex flex-wrap gap-3">
             {[
-              { icon: Truck,      text: "Free delivery over $30" },
-              { icon: Package,    text: "Packed fresh daily"     },
-              { icon: RotateCcw, text: "Easy returns"            },
+              { icon: Truck, text: "Free delivery over $30" },
+              { icon: Package, text: "Packed fresh daily" },
+              { icon: RotateCcw, text: "Easy returns" },
             ].map(b => (
               <div key={b.text} className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-full px-3 py-1.5">
                 <b.icon className="h-3.5 w-3.5 text-[#FD6E20]" /> {b.text}

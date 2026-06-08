@@ -18,12 +18,19 @@ export const getUser = async (req, res) => {
     try {
         const id = Number(req.user.id);
         const user = await prisma.user.findUnique({
-            where: { id }
+            where: { id },
+            include: {
+                _count: {
+                    select: {
+                        cart_items: true
+                    }
+                }
+            }
         });
         if (!user) {
             return res.status(404).json({ error: "User not found" });
         }
-        return res.status(200).json(user);
+        return res.status(200).json({user, cartCount: user._count.cart_items});
     } catch (err) {
         const status = err.status ?? 500;
         return res.status(status).json({ error: err.message });
@@ -112,7 +119,7 @@ export const setUserBlockStatus = async (req, res) => {
             return res.status(403).json({ error: "Admin cannot be blocked" });
         }
 
-        
+
         const updatedUser = await prisma.user.update({
             where: { id },
             data: { isBlocked },

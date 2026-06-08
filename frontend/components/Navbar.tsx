@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import {
   ShoppingCart, User, Search, Menu, Package,
@@ -8,30 +8,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import api from "@/lib/axios";
 
 /* ── mock state ─────────────────────────────────────────────── */
 const MOCK_USER = { name: "Jane Doe", email: "jane@example.com", role: "admin" };
-const CART_COUNT = 3;
+
 const IS_LOGGED_IN = true; // flip to false to see guest state
 
-const navLinks  = [{ href: "/", label: "Home", icon: Home }, { href: "/products", label: "Shop", icon: ShoppingBag }];
-const userLinks = [
-  { href: "/cart",       label: "Cart",      icon: ShoppingCart, badge: CART_COUNT },
-  { href: "/favourites", label: "Favourites", icon: Heart },
-  { href: "/orders",     label: "My Orders",  icon: ClipboardList },
-  { href: "/profile",    label: "Profile",    icon: User },
-];
-const adminLinks = [
-  { href: "/admin",            label: "Dashboard"  },
-  { href: "/admin/products",   label: "Products"   },
-  { href: "/admin/categories", label: "Categories" },
-  { href: "/admin/orders",     label: "Orders"     },
-  { href: "/admin/users",      label: "Users"      },
-];
+const navLinks = [{ href: "/", label: "Home", icon: Home }, { href: "/products", label: "Shop", icon: ShoppingBag }];
+
 
 export default function Navbar() {
-  const [scrolled,    setScrolled]    = useState(false);
-  const [drawerOpen,  setDrawerOpen]  = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { scrollY } = useScroll();
 
@@ -43,16 +33,44 @@ export default function Navbar() {
     setSearchQuery("");
   };
 
+  useEffect(() => {
+
+    const fetchUser = async () => {
+      try {
+        const res = await api.get("/user");
+        setCartCount(res.data.cartCount);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const userLinks = [
+    { href: "/cart", label: "Cart", icon: ShoppingCart },
+    { href: "/favourites", label: "Favourites", icon: Heart },
+    { href: "/orders", label: "My Orders", icon: ClipboardList },
+    { href: "/profile", label: "Profile", icon: User },
+  ];
+
+  const adminLinks = [
+    { href: "/admin", label: "Dashboard" },
+    { href: "/admin/products", label: "Products" },
+    { href: "/admin/categories", label: "Categories" },
+    { href: "/admin/orders", label: "Orders" },
+    { href: "/admin/users", label: "Users" },
+  ];
   return (
     <>
       <div className="fixed top-0 left-0 right-0 z-50 flex justify-center w-full px-4 pt-4 pb-2">
         <motion.header
           animate={{
-            width:           scrolled ? "70%" : "100%",
-            borderRadius:    scrolled ? "32px" : "0px",
-            boxShadow:       scrolled ? "0 10px 25px -5px rgba(0,0,0,0.1)" : "none",
+            width: scrolled ? "70%" : "100%",
+            borderRadius: scrolled ? "32px" : "0px",
+            boxShadow: scrolled ? "0 10px 25px -5px rgba(0,0,0,0.1)" : "none",
             backgroundColor: scrolled ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,1)",
-            backdropFilter:  scrolled ? "blur(12px)" : "none",
+            backdropFilter: scrolled ? "blur(12px)" : "none",
           }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           className="flex items-center justify-between px-6 py-3 mx-auto overflow-hidden border border-transparent"
@@ -87,7 +105,7 @@ export default function Navbar() {
             </a>
             <a href="/cart" className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
               <ShoppingCart className="h-5 w-5" />
-              {CART_COUNT > 0 && <span className="absolute top-0.5 right-0.5 bg-[#FD6E20] text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">{CART_COUNT}</span>}
+              {cartCount > 0 && <span className="absolute top-0.5 right-0.5 bg-[#FD6E20] text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">{cartCount}</span>}
             </a>
             {IS_LOGGED_IN ? (
               <a href="/profile" className="hidden sm:flex p-2 rounded-full hover:bg-gray-100 transition-colors"><User className="h-5 w-5" /></a>
@@ -123,14 +141,24 @@ export default function Navbar() {
             {IS_LOGGED_IN && (
               <>
                 <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2 mb-2 mt-4">Account</div>
-                {userLinks.map(l => (
-                  <a key={l.href} href={l.href}>
-                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-100 transition-colors cursor-pointer">
-                      <l.icon className="h-4 w-4 shrink-0" /> {l.label}
-                      {l.badge && l.badge > 0 && <span className="ml-auto bg-[#FD6E20] text-white text-[10px] font-bold h-4 px-1 rounded-full flex items-center">{l.badge}</span>}
-                    </div>
-                  </a>
-                ))}
+                {userLinks.map(l => {
+                  const isCart = l.href === "/cart";
+
+                  return (
+                    <a key={l.href} href={l.href}>
+                      <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-100 transition-colors cursor-pointer">
+                        <l.icon className="h-4 w-4 shrink-0" />
+                        {l.label}
+
+                        {isCart && cartCount > 0 && (
+                          <span className="ml-auto bg-[#FD6E20] text-white text-[10px] font-bold h-4 px-1 rounded-full flex items-center">
+                            {cartCount}
+                          </span>
+                        )}
+                      </div>
+                    </a>
+                  );
+                })}
                 {MOCK_USER.role === "admin" && (
                   <>
                     <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2 mb-2 mt-4">Admin</div>

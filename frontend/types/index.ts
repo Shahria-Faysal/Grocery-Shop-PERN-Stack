@@ -10,11 +10,11 @@ export interface Product {
   name: string;
   price: number;
   image_url?: string;
-  isFavorited?: boolean;
   discount_percent?: number;
-  category?: { name: string };
-  description?: string;
-  stock?: number;
+  category_id: number;
+  description: string;
+  stock: number;
+  category: {name: string}
 }
 
 export interface CartItem {

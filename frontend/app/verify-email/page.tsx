@@ -33,7 +33,7 @@ function VerifyEmailForm() {
             setSuccess("Email verified successfully!");
 
             setTimeout(() => {
-                router.push("/login");
+                router.push("/");
             }, 1500);
         } catch (err: any) {
             console.error("Verification error:", err);

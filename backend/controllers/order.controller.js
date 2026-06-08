@@ -65,7 +65,7 @@ export const createOrder = async (req, res) => {
 
       for (const product of products) {
         const item = cartMap.get(product.id);
-        if (product.stock < item.quantity) {
+        if (Number(product.stock) < Number(item.quantity)) {
           throw new Error(`"${product.name}" is out of stock`);
         }
       }

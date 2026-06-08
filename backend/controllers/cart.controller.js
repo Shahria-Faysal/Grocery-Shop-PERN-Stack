@@ -48,7 +48,7 @@ export const addToCart = async (req, res) => {
         }
 
         // Check stock
-        if (product.stock < Number(quantity)) {
+        if (Number(product.stock) < Number(quantity)) {
             return res.status(400).json({
                 message: "Not enough stock available"
             });
@@ -127,7 +127,7 @@ export const incrementCartItem = async (req, res) => {
             where: { id: cartItem.product_id }
         });
 
-        if (cartItem.quantity >= product.stock) {
+        if (Number(cartItem.quantity) >= Number(product.stock)) {
             return res.status(400).json({
                 message: "Cannot exceed available stock"
             });

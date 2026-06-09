@@ -1,4 +1,5 @@
 import prisma from "../lib/prisma.js";
+import uploadToCloudinary from "../utils/uploadToCloudinary.js";
 
 
 // fetch all products
@@ -119,8 +120,15 @@ export const addProduct = async (req, res) => {
             message: "Unauthorized"
         })
     }
+    let imageUrls = [];
+        if (req.files && req.files.length > 0) {
+            for (let file of req.files) {
+                const result = await uploadToCloudinary(file.buffer, "products");
+                imageUrls.push(result.secure_url);
+            }
+        }
     try {
-        const { name, description, price, unit, categoryId, stock, image } = req.body;
+        const { name, description, price, unit, categoryId, stock } = req.body;
         if (!name || !description || !price || !categoryId || !unit ) {
             return res.status(400).json({
                 message: "Please provide all the details"
@@ -134,7 +142,7 @@ export const addProduct = async (req, res) => {
                 unit: unit,
                 category_id: parseInt(categoryId),
                 stock: stock,
-                image_url: image
+                image_url: imageUrls
             }
         });
 

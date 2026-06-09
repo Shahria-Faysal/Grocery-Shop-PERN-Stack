@@ -131,7 +131,7 @@ export default function Navbar() {
                 {user ? (
                   <a href="/profile" className="hidden sm:flex p-2 rounded-full hover:bg-gray-100 transition-colors"><User className="h-5 w-5" /></a>
                 ) : (
-                  <a href="/auth/login" className="hidden sm:block ml-1">
+                  <a href="/login" className="hidden sm:block ml-1">
                     <Button size="sm" className="rounded-full bg-[#FD6E20] hover:bg-[#e55a0f]">Sign In</Button>
                   </a>
                 )}
@@ -198,8 +198,8 @@ export default function Navbar() {
             )}
             {!user && (
               <div className="mt-4 px-2 space-y-2">
-                <a href="/auth/login"><Button className="w-full rounded-full bg-[#FD6E20] hover:bg-[#e55a0f]">Sign In</Button></a>
-                <a href="/auth/register"><Button variant="outline" className="w-full rounded-full">Create Account</Button></a>
+                <a href="/login"><Button className="w-full rounded-full bg-[#FD6E20] hover:bg-[#e55a0f]">Sign In</Button></a>
+                <a href="/register"><Button variant="outline" className="w-full rounded-full">Create Account</Button></a>
               </div>
             )}
           </div>

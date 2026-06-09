@@ -28,7 +28,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
   return (
-    <div className="flex min-h-screen pt-16 mt-5">
+    <div className="flex pt-16 mt-5">
       {/* Sidebar */}
       <aside className="w-56 shrink-0 border-r border-gray-100 bg-white sticky top-16 h-[calc(100vh-4rem)] flex flex-col p-3 gap-1 mt-5">
         <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">Admin Panel</div>
@@ -45,7 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           );
         })}
 
-        <div className="mt-auto space-y-1">
+        <div className="mt-auto space-y-1 mb-10" onClick={handleLogout}>
           <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors cursor-pointer">
             <LogOut className="h-4 w-4 shrink-0" /> Sign Out
           </button>

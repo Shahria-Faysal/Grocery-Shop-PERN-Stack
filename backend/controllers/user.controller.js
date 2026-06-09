@@ -4,7 +4,15 @@ import prisma from "../lib/prisma.js";
 // get all users
 export const getAllUsers = async (req, res) => {
     try {
-        const users = await prisma.user.findMany();
+        const users = await prisma.user.findMany({
+            include: {
+                _count: {
+                    select: {
+                        orders: true
+                    }
+                }
+            }
+        });
         return res.status(200).json(users);
     } catch (err) {
         const status = err.status ?? 500;
@@ -137,8 +145,9 @@ export const setUserBlockStatus = async (req, res) => {
 // delete user
 export const deleteUser = async (req, res) => {
     try {
+        const id = Number(req.params.id);
         const user = await prisma.user.delete({
-            where: { id: req.params.id }
+            where: { id }
         });
         return res.status(200).json(user);
     } catch (err) {

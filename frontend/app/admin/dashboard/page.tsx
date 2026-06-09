@@ -1,6 +1,7 @@
 "use client";
 import { DollarSign, ShoppingBag, Users, Package, TrendingUp, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "@/context/AuthContext";
 
 const STATS = [
   { label: "Total Revenue",  value: "$12,480",  change: "+18%",  up: true,  icon: DollarSign  },
@@ -33,11 +34,12 @@ const TOP_PRODUCTS = [
 ];
 
 export default function AdminDashboardPage() {
+  const { user } = useAuth();
   return (
       <div className="space-y-8">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">Welcome back — here's what's happening today.</p>
+          <p className="text-gray-500 text-sm mt-1">Welcome back {user?.name || "Admin"} here's what's happening today.</p>
         </div>
 
         {/* Stats */}

@@ -215,7 +215,7 @@ export const getAllOrders = async (req, res) => {
 
   try {
     const orders = await prisma.order.findMany({
-      include: { order_items: true },
+      include: { order_items: true, user: true },
     });
     res.json(orders);
   } catch (err) {

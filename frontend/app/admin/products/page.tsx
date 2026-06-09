@@ -1,47 +1,200 @@
 "use client";
-import { useState } from "react";
-import { Plus, Search, Pencil, Trash2, Package } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Search, Pencil, Trash2, Package, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import api from "@/lib/axios";
 
-const PRODUCTS = [
-  { id: 1,  name: "Organic Bananas",      category: "Fruits & Veg", price: 1.99,  stock: 42,  active: true,  image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=60" },
-  { id: 2,  name: "Whole Milk 1L",         category: "Dairy",        price: 2.49,  stock: 30,  active: true,  image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=60" },
-  { id: 3,  name: "Sourdough Bread",       category: "Bakery",       price: 4.99,  stock: 15,  active: true,  image: "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=60" },
-  { id: 4,  name: "Free Range Eggs x12",   category: "Dairy",        price: 5.99,  stock: 0,   active: false, image: "https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=60" },
-  { id: 5,  name: "Avocados x4",           category: "Fruits & Veg", price: 3.99,  stock: 20,  active: true,  image: "https://images.unsplash.com/photo-1519162808019-7de1683fa2ad?w=60" },
-  { id: 6,  name: "Chicken Breast 500g",   category: "Meat & Fish",  price: 6.49,  stock: 8,   active: true,  image: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=60" },
-  { id: 7,  name: "Greek Yogurt 500g",     category: "Dairy",        price: 3.49,  stock: 25,  active: true,  image: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=60" },
-  { id: 8,  name: "Orange Juice 1L",       category: "Drinks",       price: 3.29,  stock: 35,  active: true,  image: "https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=60" },
-];
+interface Category {
+  id: number;
+  name: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  description: string | null;
+  price: string | number; // Decimal in Prisma can come as string or number
+  unit: string;
+  stock: string | number; // Decimal in Prisma can come as string or number
+  image_url: string | null;
+  category_id: number;
+  category: {
+    id: number;
+    name: string;
+  };
+}
 
 export default function AdminProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [items,  setItems]  = useState(PRODUCTS);
 
-  const filtered = items.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+  // Modal State
+  const [showModal, setShowModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  // Form State
+  const [formName, setFormName] = useState("");
+  const [formDesc, setFormDesc] = useState("");
+  const [formPrice, setFormPrice] = useState("");
+  const [formUnit, setFormUnit] = useState("");
+  const [formCategoryId, setFormCategoryId] = useState("");
+  const [formStock, setFormStock] = useState("");
+  const [formImage, setFormImage] = useState("");
+
+  const fetchProductsAndCategories = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [prodRes, catRes] = await Promise.allSettled([
+        api.get("/product"),
+        api.get("/category")
+      ]);
+
+      if (prodRes.status === "fulfilled") {
+        setProducts(prodRes.value.data.products || []);
+      } else {
+        // If backend returns 404 (No products found), it throws an error in axios.
+        const axiosError = prodRes.reason;
+        if (axiosError?.response?.status === 404) {
+          setProducts([]);
+        } else {
+          setError("Failed to fetch products. ");
+        }
+      }
+
+      if (catRes.status === "fulfilled") {
+        setCategories(catRes.value.data.categories || []);
+      } else {
+        console.error("Failed to load categories:", catRes.reason);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProductsAndCategories();
+  }, []);
+
+  const openAddModal = () => {
+    setEditingProduct(null);
+    setFormName("");
+    setFormDesc("");
+    setFormPrice("");
+    setFormUnit("");
+    setFormCategoryId(categories[0]?.id.toString() || "");
+    setFormStock("");
+    setFormImage("");
+    setShowModal(true);
+  };
+
+  const openEditModal = (p: Product) => {
+    setEditingProduct(p);
+    setFormName(p.name);
+    setFormDesc(p.description || "");
+    setFormPrice(p.price.toString());
+    setFormUnit(p.unit);
+    setFormCategoryId(p.category_id.toString());
+    setFormStock(p.stock.toString());
+    setFormImage(p.image_url || "");
+    setShowModal(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formName || !formPrice || !formUnit || !formCategoryId) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    setSubmitting(true);
+    const payload = {
+      name: formName,
+      description: formDesc,
+      price: parseFloat(formPrice),
+      unit: formUnit,
+      categoryId: parseInt(formCategoryId),
+      stock: parseFloat(formStock) || 0,
+      image: formImage || undefined
+    };
+
+    try {
+      if (editingProduct) {
+        await api.patch(`/product/edit/${editingProduct.id}`, payload);
+      } else {
+        await api.post("/product/add", payload);
+      }
+      setShowModal(false);
+      fetchProductsAndCategories();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to save product");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this product?")) return;
+    try {
+      await api.delete(`/product/delete/${id}`);
+      fetchProductsAndCategories();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to delete product");
+    }
+  };
+
+  const filtered = products.filter(p =>
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    p.category?.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Products</h1>
-            <p className="text-gray-500 text-sm mt-0.5">{items.length} total products</p>
-          </div>
-          <Button className="rounded-full bg-[#FD6E20] hover:bg-[#e55a0f] gap-2">
-            <Plus className="h-4 w-4" /> Add Product
-          </Button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Products</h1>
+          <p className="text-gray-500 text-sm mt-0.5">{products.length} total products</p>
         </div>
+        <Button
+          className="rounded-full bg-[#FD6E20] hover:bg-[#e55a0f] gap-2"
+          onClick={openAddModal}
+        >
+          <Plus className="h-4 w-4" /> Add Product
+        </Button>
+      </div>
 
-        {/* Search */}
+      {/* Search and Error State */}
+      <div className="flex items-center justify-between gap-4">
         <div className="relative w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input placeholder="Search products…" className="pl-9 rounded-full bg-white" value={search} onChange={e => setSearch(e.target.value)} />
+          <Input
+            placeholder="Search products…"
+            className="pl-9 rounded-full bg-white"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+      </div>
 
-        {/* Table */}
+      {/* Table / Loading State */}
+      {loading ? (
+        <div className="flex items-center justify-center py-32">
+          <Loader2 className="h-8 w-8 text-[#FD6E20] animate-spin" />
+        </div>
+      ) : (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
@@ -50,41 +203,57 @@ export default function AdminProductsPage() {
                 <th className="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wider">Category</th>
                 <th className="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wider">Price</th>
                 <th className="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wider">Stock</th>
-                <th className="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wider">Status</th>
                 <th className="px-5 py-3.5" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filtered.map(p => (
-                <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <img src={p.image} alt={p.name} className="w-10 h-10 rounded-xl object-cover shrink-0" />
-                      <span className="font-medium">{p.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-3.5 text-gray-500">{p.category}</td>
-                  <td className="px-5 py-3.5 font-bold">${p.price.toFixed(2)}</td>
-                  <td className="px-5 py-3.5">
-                    <span className={p.stock === 0 ? "text-red-500 font-medium" : p.stock < 10 ? "text-orange-500 font-medium" : "text-gray-700"}>
-                      {p.stock === 0 ? "Out of stock" : p.stock}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <button onClick={() => setItems(prev => prev.map(i => i.id === p.id ? { ...i, active: !i.active } : i))}>
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full cursor-pointer ${p.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                        {p.active ? "Active" : "Inactive"}
+              {filtered.map(p => {
+                const priceVal = parseFloat(p.price as string) || 0;
+                const stockVal = parseFloat(p.stock as string) || 0;
+                return (
+                  <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        {p.image_url ? (
+                          <img src={p.image_url} alt={p.name} className="w-10 h-10 rounded-xl object-cover shrink-0" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+                            <Package className="h-5 w-5 text-gray-400" />
+                          </div>
+                        )}
+                        <span className="font-medium">{p.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5 text-gray-500">{p.category?.name || "Uncategorized"}</td>
+                    <td className="px-5 py-3.5 font-bold">${priceVal.toFixed(2)} <span className="text-xs font-normal text-gray-400">/ {p.unit}</span></td>
+                    <td className="px-5 py-3.5">
+                      <span className={stockVal === 0 ? "text-red-500 font-medium" : stockVal < 10 ? "text-orange-500 font-medium" : "text-gray-700"}>
+                        {stockVal === 0 ? "Out of stock" : `${stockVal} ${p.unit}`}
                       </span>
-                    </button>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-1 justify-end">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-orange-50 hover:text-[#FD6E20]"><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-500" onClick={() => setItems(prev => prev.filter(i => i.id !== p.id))}><Trash2 className="h-3.5 w-3.5" /></Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-1 justify-end">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-lg hover:bg-orange-50 hover:text-[#FD6E20]"
+                          onClick={() => openEditModal(p)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-500"
+                          onClick={() => handleDelete(p.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           {filtered.length === 0 && (
@@ -94,6 +263,146 @@ export default function AdminProductsPage() {
             </div>
           )}
         </div>
-      </div>
+      )}
+
+      {/* Add/Edit Modal Dialog */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl border border-gray-100 flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 shrink-0">
+              <h2 className="text-xl font-bold text-gray-900">
+                {editingProduct ? "Edit Product" : "Add New Product"}
+              </h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-gray-400 hover:text-gray-600 rounded-lg p-1 hover:bg-gray-50 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Form Body */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 flex-1">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 space-y-1.5">
+                  <Label htmlFor="name" className="text-gray-700 font-medium">Product Name *</Label>
+                  <Input
+                    id="name"
+                    required
+                    placeholder="e.g. Organic Bananas"
+                    className="rounded-xl border-gray-200"
+                    value={formName}
+                    onChange={e => setFormName(e.target.value)}
+                  />
+                </div>
+
+                <div className="col-span-2 space-y-1.5">
+                  <Label htmlFor="desc" className="text-gray-700 font-medium">Description *</Label>
+                  <textarea
+                    id="desc"
+                    required
+                    rows={3}
+                    placeholder="Provide a detailed description of the product..."
+                    className="w-full text-sm rounded-xl border border-gray-200 p-3 outline-none focus:ring-1 focus:ring-ring focus:border-input"
+                    value={formDesc}
+                    onChange={e => setFormDesc(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="price" className="text-gray-700 font-medium">Price ($) *</Label>
+                  <Input
+                    id="price"
+                    required
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="1.99"
+                    className="rounded-xl border-gray-200"
+                    value={formPrice}
+                    onChange={e => setFormPrice(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="unit" className="text-gray-700 font-medium">Unit *</Label>
+                  <Input
+                    id="unit"
+                    required
+                    placeholder="e.g. kg, 1L, x12, pack"
+                    className="rounded-xl border-gray-200"
+                    value={formUnit}
+                    onChange={e => setFormUnit(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="category" className="text-gray-700 font-medium">Category *</Label>
+                  <select
+                    id="category"
+                    required
+                    className="w-full h-10 px-3 text-sm bg-white rounded-xl border border-gray-200 outline-none focus:ring-1 focus:ring-ring focus:border-input"
+                    value={formCategoryId}
+                    onChange={e => setFormCategoryId(e.target.value)}
+                  >
+                    <option value="" disabled>Select category</option>
+                    {categories.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="stock" className="text-gray-700 font-medium">Stock Quantity</Label>
+                  <Input
+                    id="stock"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    className="rounded-xl border-gray-200"
+                    value={formStock}
+                    onChange={e => setFormStock(e.target.value)}
+                  />
+                </div>
+
+                <div className="col-span-2 space-y-1.5">
+                  <Label htmlFor="image" className="text-gray-700 font-medium">Image URL</Label>
+                  <Input
+                    id="image"
+                    type="url"
+                    placeholder="https://example.com/image.jpg"
+                    className="rounded-xl border-gray-200"
+                    value={formImage}
+                    onChange={e => setFormImage(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Form Actions Footer */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="rounded-full bg-[#FD6E20] hover:bg-[#e55a0f] gap-2 min-w-[100px]"
+                >
+                  {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {editingProduct ? "Save Changes" : "Create Product"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
+

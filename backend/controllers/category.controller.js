@@ -3,7 +3,15 @@ import prisma from "../lib/prisma.js";
 //get categories
 export const getCategories = async (req, res) => {
     try {
-        const categories = await prisma.category.findMany()
+        const categories = await prisma.category.findMany({
+            include: {
+                _count: {
+                    select: {
+                        products: true
+                    }
+                }
+            }
+        })
         if (!categories) {
             return res.status(404).json({
                 message: "No categories found"

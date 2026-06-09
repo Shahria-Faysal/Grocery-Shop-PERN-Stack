@@ -77,7 +77,7 @@ export default function ProfilePage() {
     setError("");
     setIsSaving(true);
     try {
-      // Assuming you might add this to your backend later
+      // hevent added yet
       await api.patch("/user/edit", { password: passwordData.newPassword });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);

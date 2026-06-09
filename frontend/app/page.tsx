@@ -28,10 +28,10 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="space-y-12 pb-12 m-50">
+    <div className="container mx-auto px-4 py-12 space-y-12 mt-20">
       {/* Hero */}
       <section
-        className="rounded-3xl overflow-hidden text-white p-10 md:p-16 flex flex-col justify-end min-h-[420px]"
+        className="rounded-3xl overflow-hidden text-white p-10 md:p-16 flex flex-col justify-end items-center text-center md:text-left md:items-start min-h-[420px]"
         style={{ background: "linear-gradient(135deg, #111 0%, #1a1a1a 100%)" }}
       >
         <p className="text-[#FD6E20] text-sm font-semibold uppercase tracking-wider mb-3">Fresh every day</p>
@@ -63,7 +63,7 @@ export default function HomePage() {
             View all <ArrowRight className="h-4 w-4" />
           </a>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
           {CATEGORIES.map(cat => (
             <a key={cat.label} href="/products">
               <div className={`${cat.color} rounded-2xl p-4 text-center cursor-pointer hover:scale-105 transition-transform`}>

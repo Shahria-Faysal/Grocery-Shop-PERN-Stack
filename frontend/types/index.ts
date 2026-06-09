@@ -2,7 +2,9 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  phone: string;
   role: string;
+  isVerified: boolean;
 }
 
 export interface Product {

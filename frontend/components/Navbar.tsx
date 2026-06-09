@@ -8,7 +8,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import api from "@/lib/axios";
+import { useAuth } from "@/context/AuthContext";
+
 
 /* ── mock state ─────────────────────────────────────────────── */
 const MOCK_USER = { name: "Jane Doe", email: "jane@example.com", role: "admin" };
@@ -19,11 +20,12 @@ const navLinks = [{ href: "/", label: "Home", icon: Home }, { href: "/products",
 
 
 export default function Navbar() {
-  const [cartCount, setCartCount] = useState(0);
+  // const [cartCount, setCartCount] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { scrollY } = useScroll();
+  const { cartCount } = useAuth();
 
   useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 80));
 
@@ -32,20 +34,6 @@ export default function Navbar() {
     /* navigate to /products?search=... */
     setSearchQuery("");
   };
-
-  useEffect(() => {
-
-    const fetchUser = async () => {
-      try {
-        const res = await api.get("/user");
-        setCartCount(res.data.cartCount);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchUser();
-  }, []);
 
   const userLinks = [
     { href: "/cart", label: "Cart", icon: ShoppingCart },
@@ -106,6 +94,9 @@ export default function Navbar() {
             <a href="/cart" className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && <span className="absolute top-0.5 right-0.5 bg-[#FD6E20] text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">{cartCount}</span>}
+            </a>
+            <a href="/orders" className="hidden sm:flex p-2 rounded-full hover:bg-gray-100 transition-colors">
+              <ClipboardList className="h-5 w-5" />
             </a>
             {IS_LOGGED_IN ? (
               <a href="/profile" className="hidden sm:flex p-2 rounded-full hover:bg-gray-100 transition-colors"><User className="h-5 w-5" /></a>

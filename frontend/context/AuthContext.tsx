@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   loading: boolean;
+  cartCount: number;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -15,11 +16,13 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cartCount, setCartCount] = useState(0);
 
   const getMe = async () => {
     try {
-      const res = await api.get<User>("/user");
-      setUser(res.data);
+      const res = await api.get("/user");
+      setUser(res.data.user);
+      setCartCount(res.data.cartCount);
     } catch {
       setUser(null);
     } finally {
@@ -32,7 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading }}>
+    <AuthContext.Provider value={{ user, setUser, loading, cartCount }}>
       {children}
     </AuthContext.Provider>
   );

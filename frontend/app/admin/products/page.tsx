@@ -45,7 +45,8 @@ export default function AdminProductsPage() {
   const [formUnit, setFormUnit] = useState("");
   const [formCategoryId, setFormCategoryId] = useState("");
   const [formStock, setFormStock] = useState("");
-  const [formImage, setFormImage] = useState("");
+  const [formImages, setFormImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const fetchProductsAndCategories = async () => {
     setLoading(true);
@@ -95,6 +96,9 @@ export default function AdminProductsPage() {
     setFormStock("");
     setFormImage("");
     setShowModal(true);
+    setFormImages([]);
+setImagePreviews([]);
+
   };
 
   const openEditModal = (p: Product) => {
@@ -107,42 +111,62 @@ export default function AdminProductsPage() {
     setFormStock(p.stock.toString());
     setFormImage(p.image_url || "");
     setShowModal(true);
+    setFormImages([]);
+setImagePreviews(p.image_url ? [p.image_url] : []);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formName || !formPrice || !formUnit || !formCategoryId) {
-      alert("Please fill in all required fields");
-      return;
+  e.preventDefault();
+  if (!formName || !formPrice || !formUnit || !formCategoryId) {
+    alert("Please fill in all required fields");
+    return;
+  }
+  setSubmitting(true);
+
+  // Use FormData for file uploads
+  const payload = new FormData();
+  payload.append("name", formName);
+  payload.append("description", formDesc);
+  payload.append("price", formPrice);
+  payload.append("unit", formUnit);
+  payload.append("categoryId", formCategoryId);
+  payload.append("stock", formStock || "0");
+  formImages.forEach(img => payload.append("images", img)); // multer expects "images"
+
+  try {
+    if (editingProduct) {
+      await api.patch(`/product/edit/${editingProduct.id}`, payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } else {
+      await api.post("/product/add", payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
     }
+    setShowModal(false);
+    fetchProductsAndCategories();
+  } catch (err: any) {
+    alert(err.response?.data?.message || "Failed to save product");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
-    setSubmitting(true);
-    const payload = {
-      name: formName,
-      description: formDesc,
-      price: parseFloat(formPrice),
-      unit: formUnit,
-      categoryId: parseInt(formCategoryId),
-      stock: parseFloat(formStock) || 0,
-      image: formImage || undefined
-    };
+  const addFiles = (files: File[]) => {
+  const remaining = 10 - formImages.length;
+  const toAdd = files.slice(0, remaining);
+  setFormImages(prev => [...prev, ...toAdd]);
+  setImagePreviews(prev => [...prev, ...toAdd.map(f => URL.createObjectURL(f))]);
+};
 
-    try {
-      if (editingProduct) {
-        await api.patch(`/product/edit/${editingProduct.id}`, payload);
-      } else {
-        await api.post("/product/add", payload);
-      }
-      setShowModal(false);
-      fetchProductsAndCategories();
-    } catch (err: any) {
-      console.error(err);
-      alert(err.response?.data?.message || "Failed to save product");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files) addFiles(Array.from(e.target.files));
+};
 
+const handleRemoveImage = (index: number) => {
+  setFormImages(prev => prev.filter((_, i) => i !== index));
+  setImagePreviews(prev => prev.filter((_, i) => i !== index));
+};
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
@@ -158,6 +182,19 @@ export default function AdminProductsPage() {
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     p.category?.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  useEffect(() => {
+  const handlePaste = (e: ClipboardEvent) => {
+    const items = Array.from(e.clipboardData?.items || []);
+    const files = items
+      .filter(it => it.kind === "file" && it.type.startsWith("image/"))
+      .map(it => it.getAsFile())
+      .filter(Boolean) as File[];
+    if (files.length) addFiles(files);
+  };
+  document.addEventListener("paste", handlePaste);
+  return () => document.removeEventListener("paste", handlePaste);
+}, [formImages]); // dep on formImages so `remaining` count is current
 
   return (
     <div className="space-y-6">
@@ -367,16 +404,53 @@ export default function AdminProductsPage() {
                 </div>
 
                 <div className="col-span-2 space-y-1.5">
-                  <Label htmlFor="image" className="text-gray-700 font-medium">Image URL</Label>
-                  <Input
-                    id="image"
-                    type="url"
-                    placeholder="https://example.com/image.jpg"
-                    className="rounded-xl border-gray-200"
-                    value={formImage}
-                    onChange={e => setFormImage(e.target.value)}
-                  />
-                </div>
+  <Label className="text-gray-700 font-medium">Product Images</Label>
+
+  {/* Drop zone */}
+  <div
+    className="relative border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-[#FD6E20] hover:bg-orange-50 transition-colors"
+    onDragOver={e => e.preventDefault()}
+    onDrop={e => {
+      e.preventDefault();
+      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
+      addFiles(files);
+    }}
+  >
+    <input
+      type="file"
+      accept="image/*"
+      multiple
+      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+      onChange={handleImageChange}
+    />
+    <Package className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+    <p className="text-sm font-medium text-gray-600">Click to upload or drag & drop</p>
+    <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP — up to 10 images</p>
+  </div>
+
+  {/* Previews */}
+  {imagePreviews.length > 0 && (
+    <div className="grid grid-cols-5 gap-2 mt-2">
+      {imagePreviews.map((src, i) => (
+        <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-gray-100 group">
+          <img src={src} alt="" className="w-full h-full object-cover" />
+          {i === 0 && (
+            <span className="absolute bottom-1 left-1 bg-[#FD6E20] text-white text-[10px] px-1.5 py-0.5 rounded">
+              primary
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => handleRemoveImage(i)}
+            className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
               </div>
 
               {/* Form Actions Footer */}

@@ -1,11 +1,24 @@
+"use client"
 import "./globals.css";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
+function AuthHandler({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (user?.role === 'admin' && !window.location.pathname.startsWith('/admin')) {
+      router.replace('/admin');
+    }
+  }, [user, router]);
+  return <>{children}</>;
+}
 
 export default function RootLayout({
   children,
@@ -16,8 +29,10 @@ export default function RootLayout({
     <html lang="en" className={cn("font-sans", geist.variable)}>
       <body>
         <AuthProvider>
-          <Navbar />
+          <AuthHandler>
+            <Navbar />
             {children}
+          </AuthHandler>
         </AuthProvider>
       </body>
     </html>

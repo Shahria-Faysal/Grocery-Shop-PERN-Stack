@@ -115,38 +115,34 @@ export const getProductById = async (req, res) => {
 
 // add product
 export const addProduct = async (req, res) => {
-    if (req.user.role !== "admin") {
-        return res.status(401).json({
-            message: "Unauthorized"
-        })
-    }
-    let imageUrls = [];
-        if (req.files && req.files.length > 0) {
-            for (let file of req.files) {
-                const result = await uploadToCloudinary(file.buffer, "products");
-                imageUrls.push(result.secure_url);
-            }
-        }
     try {
         const { name, description, price, unit, categoryId, stock } = req.body;
-        if (!name || !description || !price || !categoryId || !unit ) {
-            return res.status(400).json({
-                message: "Please provide all the details"
-            })
+
+        if (!name || !description || !price || !categoryId || !unit) {
+            return res.status(400).json({ message: "Please provide all the details" });
         }
+
+        // Upload images inside try/catch so errors are handled
+        let imageUrls = [];
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                const url = await uploadToCloudinary(file.buffer, "products");
+                imageUrls.push(url);
+            }
+        }
+
         const product = await prisma.product.create({
             data: {
-                name: name,
-                description: description,
-                price: price,
-                unit: unit,
+                name,
+                description,
+                price: parseFloat(price),       // fix #3
+                unit,
                 category_id: parseInt(categoryId),
-                stock: stock,
-                image_url: imageUrls
+                stock: parseFloat(stock) || 0,  // fix #3
+                image_url: imageUrls[0] ?? null  // fix #2 — primary image only
             }
         });
 
-        // Audit Log
         await prisma.auditLog.create({
             data: {
                 action: "CREATE",
@@ -157,17 +153,13 @@ export const addProduct = async (req, res) => {
             }
         });
 
-        return res.status(201).json({
-            message: "Product added successfully",
-            product
-        })
+        return res.status(201).json({ message: "Product added successfully", product });
+
     } catch (err) {
-        console.log(err);
-        return res.status(500).json({
-            message: "Internal server error"
-        })
+        console.error(err);
+        return res.status(500).json({ message: "Internal server error" });
     }
-}
+};
 
 // update product
 export const updateProduct = async (req, res) => {

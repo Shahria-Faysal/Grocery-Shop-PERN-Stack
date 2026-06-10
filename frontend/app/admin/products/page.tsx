@@ -45,6 +45,7 @@ export default function AdminProductsPage() {
   const [formUnit, setFormUnit] = useState("");
   const [formCategoryId, setFormCategoryId] = useState("");
   const [formStock, setFormStock] = useState("");
+  const [formImage, setFormImage] = useState("");
   const [formImages, setFormImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 

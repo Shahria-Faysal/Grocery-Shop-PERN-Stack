@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 function AuthHandler({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();

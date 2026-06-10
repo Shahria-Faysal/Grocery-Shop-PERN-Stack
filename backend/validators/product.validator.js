@@ -6,8 +6,7 @@ export const createProductSchema = z.object({
   price: z.coerce.number().positive(),
   unit: z.string(),
   categoryId: z.coerce.number().int().positive(),
-  stock: z.coerce.number().int().min(0).optional(),
-  image: z.string().optional()
+  stock: z.coerce.number().int().min(0).optional()
 });
 
 export const updateProductSchema = z.object({
@@ -16,6 +15,5 @@ export const updateProductSchema = z.object({
   price: z.coerce.number().positive().optional(),
   unit: z.string().optional(),
   categoryId: z.coerce.number().int().positive().optional(),
-  stock: z.coerce.number().int().min(0).optional(),
-  image: z.string().optional()
+  stock: z.coerce.number().int().min(0).optional()
 });

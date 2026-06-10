@@ -7,7 +7,7 @@ export const uploadToCloudinary = (buffer, folder = "general") => {
             { folder },
             (error, result) => {
                 if (error) reject(error);
-                else resolve(result);
+                else resolve(result.secure_url);
             }
         );
         streamifier.createReadStream(buffer).pipe(stream);

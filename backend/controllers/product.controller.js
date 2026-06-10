@@ -1,5 +1,5 @@
 import prisma from "../lib/prisma.js";
-import uploadToCloudinary from "../utils/uploadToCloudinary.js";
+import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 
 
 // fetch all products
@@ -90,7 +90,7 @@ export const getProductById = async (req, res) => {
             },
             include: {
                 category: {
-                    select:{
+                    select: {
                         name: true
                     }
                 }
@@ -116,33 +116,33 @@ export const getProductById = async (req, res) => {
 // add product
 export const addProduct = async (req, res) => {
     try {
-        const { name, description, price, unit, categoryId, stock } = req.body;
-
-        if (!name || !description || !price || !categoryId || !unit) {
-            return res.status(400).json({ message: "Please provide all the details" });
+        // 1. Validate + coerce req.body first
+        const parsed = createProductSchema.safeParse(req.body);
+        if (!parsed.success) {
+            return res.status(400).json({ message: parsed.error.errors[0].message });
         }
+        const { name, description, price, unit, categoryId, stock } = parsed.data;
 
-        // Upload images inside try/catch so errors are handled
-        let imageUrls = [];
+        // 2. Upload images
+        let imageUrl = null;
         if (req.files && req.files.length > 0) {
-            for (const file of req.files) {
-                const url = await uploadToCloudinary(file.buffer, "products");
-                imageUrls.push(url);
-            }
+            imageUrl = await uploadToCloudinary(req.files[0].buffer, "grocery");
         }
 
+        // 3. Save to DB — no manual parseFloat/parseInt needed, parsed.data already has correct types
         const product = await prisma.product.create({
             data: {
                 name,
                 description,
-                price: parseFloat(price),       // fix #3
+                price,
                 unit,
-                category_id: parseInt(categoryId),
-                stock: parseFloat(stock) || 0,  // fix #3
-                image_url: imageUrls[0] ?? null  // fix #2 — primary image only
+                category_id: categoryId,
+                stock: stock ?? 0,
+                image_url: imageUrl || null  // ✅
             }
         });
 
+        // 4. Audit log
         await prisma.auditLog.create({
             data: {
                 action: "CREATE",
@@ -172,24 +172,24 @@ export const updateProduct = async (req, res) => {
         const id = Number(req.params.id);
         // Fetch the current product to use as fallback values
         const existingProduct = await prisma.product.findUnique({
-          where: { id },
+            where: { id },
         });
         if (!existingProduct) {
-          return res.status(404).json({ message: "Product not found" });
+            return res.status(404).json({ message: "Product not found" });
         }
         const { name, description, price, unit, categoryId, stock, image } = req.body;
         const updateData = {
-          name: name ?? existingProduct.name,
-          description: description ?? existingProduct.description,
-          price: price ?? existingProduct.price,
-          unit: unit ?? existingProduct.unit,
-          category_id: categoryId ? parseInt(categoryId) : existingProduct.category_id,
-          stock: stock ?? existingProduct.stock,
-          image_url: image ?? existingProduct.image_url,
+            name: name ?? existingProduct.name,
+            description: description ?? existingProduct.description,
+            price: price ?? existingProduct.price,
+            unit: unit ?? existingProduct.unit,
+            category_id: categoryId ? parseInt(categoryId) : existingProduct.category_id,
+            stock: stock ?? existingProduct.stock,
+            image_url: image ?? existingProduct.image_url,
         };
         const product = await prisma.product.update({
-          where: { id },
-          data: updateData,
+            where: { id },
+            data: updateData,
         });
 
         // Audit Log

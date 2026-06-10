@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma.js";
 import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
+import { createProductSchema, updateProductSchema } from "../validators/product.validator.js";
 
 
 // fetch all products

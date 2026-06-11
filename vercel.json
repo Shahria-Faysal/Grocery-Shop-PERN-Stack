@@ -10,10 +10,5 @@
       "src": "/(.*)",
       "dest": "/frontend/$1"
     }
-  ],
-  "functions": {
-    "frontend/api/**/*.js": {
-      "runtime": "nodejs20.x"
-    }
-  }
+  ]
 }

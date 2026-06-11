@@ -21,7 +21,7 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://grocery-shop-frontend.vercel.app",
+    "https://grocery-shop-pern-stack-oftzfib1z-shahria-faysals-projects.vercel.app",
     // Add more origins as needed (e.g., custom domains)
   ],
   credentials: true,

@@ -1,0 +1,19 @@
+{
+  "builds": [
+    {
+      "src": "frontend/next.config.js",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/$1"
+    }
+  ],
+  "functions": {
+    "frontend/api/**/*.js": {
+      "runtime": "nodejs20.x"
+    }
+  }
+}

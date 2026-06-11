@@ -18,7 +18,14 @@ import auditRouter from "./routes/audit.routes.js";
 
 const app = express();
 
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "https://grocery-shop-frontend.vercel.app",
+    // Add more origins as needed (e.g., custom domains)
+  ],
+  credentials: true,
+}));
 app.use(express.json());
 app.use(cookieParser());
 app.use(helmet());

@@ -122,7 +122,7 @@ export const addProduct = async (req, res) => {
         if (!parsed.success) {
             return res.status(400).json({ message: parsed.error.errors[0].message });
         }
-        const { name, description, price, unit, categoryId, stock } = parsed.data;
+        const { name, description, price, unit, categoryId, stock, discount_percent } = parsed.data;
 
         // 2. Upload images
         let imageUrl = null;
@@ -139,7 +139,8 @@ export const addProduct = async (req, res) => {
                 unit,
                 category_id: categoryId,
                 stock: stock ?? 0,
-                image_url: imageUrl || null  // ✅
+                discount_percent: discount_percent ?? 0,
+                image_url: imageUrl || null
             }
         });
 
@@ -178,7 +179,7 @@ export const updateProduct = async (req, res) => {
         if (!existingProduct) {
             return res.status(404).json({ message: "Product not found" });
         }
-        const { name, description, price, unit, categoryId, stock, image } = req.body;
+        const { name, description, price, unit, categoryId, stock, image, discount_percent } = req.body;
         const updateData = {
             name: name ?? existingProduct.name,
             description: description ?? existingProduct.description,
@@ -187,6 +188,7 @@ export const updateProduct = async (req, res) => {
             category_id: categoryId ? parseInt(categoryId) : existingProduct.category_id,
             stock: stock ?? existingProduct.stock,
             image_url: image ?? existingProduct.image_url,
+            discount_percent: discount_percent !== undefined ? parseFloat(discount_percent) : existingProduct.discount_percent,
         };
         const product = await prisma.product.update({
             where: { id },
@@ -219,38 +221,38 @@ export const updateProduct = async (req, res) => {
 
 // delete product
 export const deleteProduct = async (req, res) => {
-    if (req.user.role !== "admin") {
-        return res.status(401).json({
-            message: "Unauthorized"
-        })
+  try {
+    const id = Number(req.params.id);
+    // Verify product exists before attempting delete
+    const existing = await prisma.product.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({
+        message: "Product not found"
+      });
     }
-    try {
-        const id = Number(req.params.id);
-        const product = await prisma.product.delete({
-            where: {
-                id
-            }
-        });
+    const product = await prisma.product.delete({
+      where: { id }
+    });
+    // Audit Log
+    await prisma.auditLog.create({
+      data: {
+        action: "DELETE",
+        table_name: "Product",
+        record_id: product.id,
+        old_data: product,
+        user_id: req.user.id
+      }
+    });
+    return res.status(200).json({
+      message: "Product deleted successfully",
+      product
+    });
+  } catch (err) {
+    console.error(err);
+    // If Prisma cannot find the record (should be caught above), return generic server error
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
 
-        // Audit Log
-        await prisma.auditLog.create({
-            data: {
-                action: "DELETE",
-                table_name: "Product",
-                record_id: product.id,
-                old_data: product,
-                user_id: req.user.id
-            }
-        });
-
-        return res.status(200).json({
-            message: "Product deleted successfully",
-            product
-        })
-    } catch (err) {
-        console.log(err);
-        return res.status(500).json({
-            message: "Internal server error"
-        })
-    }
 }

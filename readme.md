@@ -144,4 +144,18 @@ Please adhere to the existing coding style and run `npm run lint` before submitt
 This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.
 
 ---
-*Happy coding!*
+## Screenshots
+
+![](frontend/public/screenshots/Screenshot%202026-06-11%20111831.png)
+![](frontend/public/screenshots/Screenshot%202026-06-11%20112308.png)
+![](frontend/public/screenshots/Screenshot%202026-06-11%20112308.png)
+![](frontend/public/screenshots/Screenshot%202026-06-11%20112318.png)
+![](frontend/public/screenshots/Screenshot%202026-06-11%20112509.png)
+![](frontend/public/screenshots/Screenshot%202026-06-11%20112528.png)
+![](frontend/public/screenshots/Screenshot%202026-06-11%20112547.png)
+![](frontend/public/screenshots/Screenshot%202026-06-11%20112606.png)
+![](frontend/public/screenshots/Screenshot%202026-06-11%20112716.png)
+![](frontend/public/screenshots/Screenshot%202026-06-11%20112230.png)
+![](frontend/public/screenshots/Screenshot%202026-06-11%20111714.png)
+![](frontend/public/screenshots/Screenshot%202026-06-11%20111756.png)
+![](frontend/public/screenshots/Screenshot%202026-06-11%20111654.png)

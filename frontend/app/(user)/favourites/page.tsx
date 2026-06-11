@@ -63,7 +63,7 @@ export default function FavouritesPage() {
               <Card key={item.id} className="overflow-hidden border-none shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group h-full flex flex-col">
                 <a href={`/products/${productId}`} className="block">
                   <div className="aspect-square bg-gray-50 relative overflow-hidden">
-                    <img src={product.image || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300"} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={product.image_url || "/placeholder-product.png"} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     {product.stock === 0 && (
                       <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
                         <span className="text-xs font-semibold text-gray-500 bg-white/90 px-3 py-1 rounded-full">Out of stock</span>
@@ -72,7 +72,7 @@ export default function FavouritesPage() {
                   </div>
                 </a>
                 <CardContent className="p-3 flex-1 flex flex-col">
-                  <div className="text-[10px] text-gray-400 mb-0.5">{product.category || "Uncategorized"}</div>
+                  <div className="text-[10px] text-gray-400 mb-0.5">{product.category?.name || "Uncategorized"}</div>
                   <h3 className="font-semibold text-sm line-clamp-2 flex-1">{product.name}</h3>
                   <div className="font-bold mt-2">${Number(product.price).toFixed(2)}</div>
                   <div className="flex gap-2 mt-3">

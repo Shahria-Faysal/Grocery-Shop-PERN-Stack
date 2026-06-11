@@ -7,19 +7,22 @@ The Grocery Shop API provides endpoints for managing users, products, categories
 
 ## 🛠️ Tech Stack
 
-| Dependency | Version | Purpose |
-|---|---|---|
-| **express** | ^5.2.1 | Web framework |
-| **prisma** | ^6.19.3 | ORM & database schema |
-| **@neondatabase/serverless** | latest | PostgreSQL driver (WebSocket) |
-| **bcrypt** | latest | Password hashing |
-| **jsonwebtoken** | latest | JWT auth tokens |
-| **zod** | ^4.4.3 | Request validation |
-| **helmet** | latest | Security headers |
-| **dotenv** | latest | Environment variables |
-| **cookie-parser** | latest | Cookie parsing |
-| **cors** | latest | Cross‑origin requests |
-| **brevo (Sendinblue)** | latest | Transactional emails |
+**Frontend**  
+- **Next.js 14** (App Router) – SSR + static generation  
+- **TypeScript** – static typing for React components  
+- **React** – UI library  
+- **Tailwind CSS** + **shadcn/ui** – utility‑first styling & pre‑built components  
+- **Axios** – centralized API client (`frontend/lib/axios.ts`)  
+- **Cloudinary** – image hosting (URLs stored in `image_url`)  
+
+**Backend**  
+- **Node.js 20** (Express) – server framework  
+- **Prisma** – type‑safe ORM (`backend/prisma/schema.prisma`)  
+- **PostgreSQL (Neon)** – managed DB  
+- **Zod** – request validation  
+- **Cloudinary** – media storage  
+
+
 
 ## 📂 Project Structure
 ```

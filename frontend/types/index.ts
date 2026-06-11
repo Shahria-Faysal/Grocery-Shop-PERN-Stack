@@ -16,7 +16,9 @@ export interface Product {
   category_id: number;
   description: string;
   stock: number;
-  category: {name: string}
+  unit?: string;
+  category: { name: string };
+  isFavorited?: boolean;
 }
 
 export interface CartItem {

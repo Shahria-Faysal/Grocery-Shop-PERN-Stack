@@ -11,9 +11,9 @@ const SUMMARY_ITEMS = [
   { name: "Sourdough Bread x1",   price: 4.99,  image: "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=80" },
   { name: "Greek Yogurt 500g x3", price: 10.47, image: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=80" },
 ];
-const SUBTOTAL  = 19.44;
-const DELIVERY  = 0;
-const TOTAL     = 19.44;
+const SUBTOTAL: number  = 19.44;
+const DELIVERY: number  = 0;
+const TOTAL: number     = 19.44;
 
 const STEPS = ["Delivery", "Payment", "Review"];
 

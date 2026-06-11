@@ -1,6 +1,6 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Package, Tag, ClipboardList, Users, LogOut, ShoppingBag } from "lucide-react";
+import { LayoutDashboard, Package, Tag, ClipboardList, Users, LogOut, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/axios";
 
@@ -10,6 +10,7 @@ const links = [
   { href: "/admin/categories", label: "Categories", icon: Tag             },
   { href: "/admin/orders",     label: "Orders",     icon: ClipboardList   },
   { href: "/admin/users",      label: "Users",      icon: Users           },
+  { href: "/admin/audit",      label: "Audit Log",  icon: ShieldCheck     },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

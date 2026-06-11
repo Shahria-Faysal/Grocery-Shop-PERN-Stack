@@ -10,7 +10,12 @@ export const getAuditLogs = async (req, res) => {
 
     const logs = await prisma.auditLog.findMany({
       orderBy: { created_at: "desc" },
-      take: 100
+      take: 200,
+      include: {
+        user: {
+          select: { id: true, name: true, role: true }
+        }
+      }
     });
 
     res.json(logs);
@@ -30,7 +35,12 @@ export const getLogsByRecord = async (req, res) => {
         table_name: table,
         record_id: Number(id)
       },
-      orderBy: { created_at: "desc" }
+      orderBy: { created_at: "desc" },
+      include: {
+        user: {
+          select: { id: true, name: true, role: true }
+        }
+      }
     });
 
     res.json(logs);

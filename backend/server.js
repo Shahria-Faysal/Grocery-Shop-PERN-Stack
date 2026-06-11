@@ -19,10 +19,19 @@ import auditRouter from "./routes/audit.routes.js";
 const app = express();
 
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://grocery-shop-pern-stack.vercel.app",
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (e.g., mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    const allowed = [
+      "http://localhost:3000",
+      "https://grocery-shop-pern-stack.vercel.app",
+    ];
+    // Also allow all Vercel preview deployments for this project
+    if (allowed.includes(origin) || origin.endsWith(".vercel.app")) {
+      return callback(null, true);
+    }
+    callback(new Error("Not allowed by CORS"));
+  },
   credentials: true,
 }));
 app.use(express.json());
